@@ -1,0 +1,73 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+env/
+
+# Environment Variables (NEVER COMMIT THIS!)
+.env
+
+# Database
+instance/
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Uploads (user generated content)
+static/uploads/media/*
+static/uploads/profiles/*
+static/uploads/status/*
+app/static/uploads/media/*
+app/static/uploads/profiles/*
+app/static/uploads/status/*
+
+# Keep directory structure
+!static/uploads/media/.gitkeep
+!static/uploads/profiles/.gitkeep
+!static/uploads/status/.gitkeep
+!app/static/uploads/media/.gitkeep
+!app/static/uploads/profiles/.gitkeep
+!app/static/uploads/status/.gitkeep
+
+# Logs
+*.log
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Jupyter Notebook
+.ipynb_checkpoints

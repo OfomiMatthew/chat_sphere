@@ -1,0 +1,955 @@
+{% extends 'base.html' %} {% block title %}Status - ChatSphere{% endblock %} {%
+block content %}
+<div class="min-h-screen bg-splinter-darker">
+  <!-- Header -->
+  <div
+    class="p-4 bg-splinter-gray border-b border-splinter-border flex items-center justify-between glow-border"
+  >
+    <div class="flex items-center space-x-4">
+      <a
+        href="{{ url_for('main.index') }}"
+        class="p-2 hover-glow rounded-full border border-splinter-border transition"
+      >
+        <i class="fas fa-arrow-left text-splinter-green"></i>
+      </a>
+      <h1
+        class="text-2xl font-bold splinter-font text-splinter-green glow-text"
+      >
+        STATUS
+      </h1>
+    </div>
+    <button
+      onclick="openCreateStatusModal()"
+      class="cyber-button px-4 py-2 rounded-lg splinter-font"
+    >
+      <i class="fas fa-plus mr-2"></i>CREATE
+    </button>
+  </div>
+
+  <div class="p-4">
+    <!-- My Status -->
+    <div class="mb-8">
+      <h2
+        class="text-lg font-semibold text-splinter-green splinter-font mb-4 uppercase tracking-wider"
+      >
+        MY STATUS
+      </h2>
+
+      {% if my_statuses %}
+      <div
+        class="bg-splinter-gray border border-splinter-border rounded-lg p-4 hover-glow cursor-pointer"
+        onclick="viewMyStatuses()"
+      >
+        <div class="flex items-center space-x-3">
+          <div class="relative">
+            <img
+              src="{{ url_for('static', filename='uploads/profiles/' + current_user.profile_pic) }}"
+              alt="{{ current_user.username }}"
+              class="w-14 h-14 rounded-full border-2 border-splinter-green pulse-glow object-cover"
+              onerror="this.src='https://ui-avatars.com/api/?name={{ current_user.username }}&background=00ff41&color=0a0e0f&bold=true'"
+            />
+            <span
+              class="absolute bottom-0 right-0 w-5 h-5 bg-splinter-green rounded-full border-2 border-splinter-gray flex items-center justify-center"
+            >
+              <i class="fas fa-plus text-splinter-darker text-xs"></i>
+            </span>
+          </div>
+          <div class="flex-1">
+            <p class="font-semibold text-gray-100 splinter-font">My Status</p>
+            <p class="text-sm text-gray-400">
+              {{ my_statuses|length }} update{{ 's' if my_statuses|length > 1
+              else '' }}
+            </p>
+          </div>
+          <span class="text-xs text-splinter-green splinter-font"
+            >{{ my_statuses[0].created_at.strftime('%H:%M') }}</span
+          >
+        </div>
+      </div>
+      {% else %}
+      <div
+        class="bg-splinter-gray border border-splinter-border rounded-lg p-4 hover-glow cursor-pointer"
+        onclick="openCreateStatusModal()"
+      >
+        <div class="flex items-center space-x-3">
+          <div class="relative">
+            <img
+              src="{{ url_for('static', filename='uploads/profiles/' + current_user.profile_pic) }}"
+              alt="{{ current_user.username }}"
+              class="w-14 h-14 rounded-full border-2 border-splinter-border object-cover"
+              onerror="this.src='https://ui-avatars.com/api/?name={{ current_user.username }}&background=00ff41&color=0a0e0f&bold=true'"
+            />
+            <span
+              class="absolute bottom-0 right-0 w-5 h-5 bg-splinter-green rounded-full border-2 border-splinter-gray flex items-center justify-center"
+            >
+              <i class="fas fa-plus text-splinter-darker text-xs"></i>
+            </span>
+          </div>
+          <div class="flex-1">
+            <p class="font-semibold text-gray-100 splinter-font">My Status</p>
+            <p class="text-sm text-gray-400">Tap to add status update</p>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Recent Updates -->
+    {% if status_users %}
+    <div>
+      <h2
+        class="text-lg font-semibold text-splinter-green splinter-font mb-4 uppercase tracking-wider"
+      >
+        RECENT UPDATES
+      </h2>
+
+      <div class="space-y-2">
+        {% for status_user in status_users %}
+        <div
+          class="bg-splinter-gray border border-splinter-border rounded-lg p-4 hover-glow cursor-pointer"
+          onclick="viewUserStatuses({{ status_user.user.id }})"
+        >
+          <div class="flex items-center space-x-3">
+            <div class="relative">
+              <img
+                src="{{ url_for('static', filename='uploads/profiles/' + status_user.user.profile_pic) }}"
+                alt="{{ status_user.user.username }}"
+                class="w-14 h-14 rounded-full object-cover"
+                style="border: 3px solid {% if status_user.unseen_count > 0 %}#00ff41{% else %}#ffffff33{% endif %}"
+                onerror="this.src='https://ui-avatars.com/api/?name={{ status_user.user.username }}&background=00ff41&color=0a0e0f&bold=true'"
+              />
+              {% if status_user.unseen_count > 0 %}
+              <span
+                class="absolute -top-1 -right-1 w-5 h-5 bg-splinter-green text-splinter-darker text-xs font-bold rounded-full flex items-center justify-center"
+              >
+                {{ status_user.unseen_count }}
+              </span>
+              {% endif %}
+            </div>
+            <div class="flex-1">
+              <p class="font-semibold text-gray-100 splinter-font">
+                {{ status_user.user.username }}
+              </p>
+              <p class="text-sm text-gray-400">
+                {{ status_user.statuses|length }} update{{ 's' if
+                status_user.statuses|length > 1 else '' }}
+              </p>
+            </div>
+            <span class="text-xs text-gray-400 splinter-font">
+              {{ status_user.statuses[0].created_at.strftime('%H:%M') }}
+            </span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% else %}
+    <div class="text-center py-12">
+      <i
+        class="fas fa-circle-notch text-6xl text-splinter-green opacity-50 mb-4"
+      ></i>
+      <p class="text-gray-400 splinter-font">No status updates yet</p>
+      <p class="text-sm text-gray-500 mt-2">
+        Your contacts' status will appear here
+      </p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Create Status Modal -->
+<div
+  id="createStatusModal"
+  class="fixed inset-0 bg-black bg-opacity-90 hidden items-center justify-center z-50"
+>
+  <div
+    class="bg-splinter-gray border-2 border-splinter-green rounded-lg p-6 max-w-md w-full mx-4 glow-border"
+  >
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-xl font-bold splinter-font text-splinter-green">
+        CREATE STATUS
+      </h3>
+      <button
+        onclick="closeCreateStatusModal()"
+        class="text-gray-400 hover:text-splinter-green"
+      >
+        <i class="fas fa-times text-xl"></i>
+      </button>
+    </div>
+
+    <form id="statusForm" onsubmit="createStatus(event)">
+      <!-- Status Type Selector -->
+      <div class="mb-4">
+        <div class="flex space-x-2">
+          <button
+            type="button"
+            onclick="selectStatusType('text')"
+            id="textTypeBtn"
+            class="flex-1 py-2 px-4 rounded-lg border-2 border-splinter-green bg-splinter-green text-black font-semibold splinter-font"
+          >
+            <i class="fas fa-font mr-2"></i>TEXT
+          </button>
+          <button
+            type="button"
+            onclick="selectStatusType('image')"
+            id="imageTypeBtn"
+            class="flex-1 py-2 px-4 rounded-lg border-2 border-splinter-border text-gray-400 font-semibold splinter-font"
+          >
+            <i class="fas fa-image mr-2"></i>IMAGE
+          </button>
+          <button
+            type="button"
+            onclick="selectStatusType('video')"
+            id="videoTypeBtn"
+            class="flex-1 py-2 px-4 rounded-lg border-2 border-splinter-border text-gray-400 font-semibold splinter-font"
+          >
+            <i class="fas fa-video mr-2"></i>VIDEO
+          </button>
+          <button
+            type="button"
+            onclick="selectStatusType('audio')"
+            id="audioTypeBtn"
+            class="flex-1 py-2 px-4 rounded-lg border-2 border-splinter-border text-gray-400 font-semibold splinter-font"
+          >
+            <i class="fas fa-microphone mr-2"></i>AUDIO
+          </button>
+        </div>
+        <input type="hidden" id="statusType" value="text" />
+      </div>
+
+      <!-- Text Status Section -->
+      <div id="textSection">
+        <div class="mb-4">
+          <textarea
+            id="statusContent"
+            class="w-full px-4 py-3 cyber-input rounded-lg text-gray-100"
+            placeholder="What's on your mind?"
+            rows="4"
+          ></textarea>
+        </div>
+
+        <div class="mb-4">
+          <label class="block text-splinter-green text-sm mb-2 splinter-font"
+            >BACKGROUND COLOR</label
+          >
+          <div class="grid grid-cols-5 gap-2">
+            <button
+              type="button"
+              onclick="selectColor('#075E54')"
+              class="w-full h-10 rounded ring-2 ring-splinter-green"
+              style="background: #075e54"
+            ></button>
+            <button
+              type="button"
+              onclick="selectColor('#128C7E')"
+              class="w-full h-10 rounded"
+              style="background: #128c7e"
+            ></button>
+            <button
+              type="button"
+              onclick="selectColor('#25D366')"
+              class="w-full h-10 rounded"
+              style="background: #25d366"
+            ></button>
+            <button
+              type="button"
+              onclick="selectColor('#34B7F1')"
+              class="w-full h-10 rounded"
+              style="background: #34b7f1"
+            ></button>
+            <button
+              type="button"
+              onclick="selectColor('#8B00FF')"
+              class="w-full h-10 rounded"
+              style="background: #8b00ff"
+            ></button>
+            <button
+              type="button"
+              onclick="selectColor('#FF4500')"
+              class="w-full h-10 rounded"
+              style="background: #ff4500"
+            ></button>
+            <button
+              type="button"
+              onclick="selectColor('#FF1493')"
+              class="w-full h-10 rounded"
+              style="background: #ff1493"
+            ></button>
+            <button
+              type="button"
+              onclick="selectColor('#FFD700')"
+              class="w-full h-10 rounded"
+              style="background: #ffd700"
+            ></button>
+            <button
+              type="button"
+              onclick="selectColor('#000000')"
+              class="w-full h-10 rounded border border-splinter-green"
+              style="background: #000000"
+            ></button>
+            <button
+              type="button"
+              onclick="selectColor('#FFFFFF')"
+              class="w-full h-10 rounded border border-splinter-green"
+              style="background: #ffffff"
+            ></button>
+          </div>
+          <input type="hidden" id="selectedColor" value="#075E54" />
+        </div>
+      </div>
+
+      <!-- Media Upload Section -->
+      <div id="mediaSection" class="hidden">
+        <div class="mb-4">
+          <label
+            class="block w-full border-2 border-dashed border-splinter-green rounded-lg p-8 text-center cursor-pointer hover-glow transition"
+          >
+            <input
+              type="file"
+              id="mediaFile"
+              accept="image/*,video/*,audio/*"
+              class="hidden"
+              onchange="handleMediaSelect(event)"
+            />
+            <div id="uploadPrompt">
+              <i class="fas fa-cloud-upload-alt text-5xl text-splinter-green mb-3"></i>
+              <p class="text-gray-300 splinter-font">
+                Click to upload image, video, or audio
+              </p>
+              <p class="text-sm text-gray-500 mt-2">
+                Max size: 16MB
+              </p>
+            </div>
+            <div id="mediaPreview" class="hidden">
+              <!-- Preview will be shown here -->
+            </div>
+          </label>
+        </div>
+
+        <div class="mb-4">
+          <textarea
+            id="mediaCaption"
+            class="w-full px-4 py-3 cyber-input rounded-lg text-gray-100"
+            placeholder="Add a caption (optional)..."
+            rows="2"
+          ></textarea>
+        </div>
+      </div>
+
+      <button
+        type="submit"
+        class="w-full py-3 cyber-button rounded-lg text-splinter-green font-semibold splinter-font"
+      >
+        <i class="fas fa-paper-plane mr-2"></i>POST STATUS (24H)
+      </button>
+    </form>
+            class="w-full h-10 rounded"
+            style="background: #ffd700"
+          ></button>
+          <button
+            type="button"
+            onclick="selectColor('#000000')"
+            class="w-full h-10 rounded border border-splinter-green"
+            style="background: #000000"
+          ></button>
+          <button
+            type="button"
+            onclick="selectColor('#FFFFFF')"
+            class="w-full h-10 rounded border border-splinter-green"
+            style="background: #ffffff"
+          ></button>
+        </div>
+        <input type="hidden" id="selectedColor" value="#075E54" />
+      </div>
+
+      <button
+        type="submit"
+        class="w-full py-3 cyber-button rounded-lg text-splinter-green font-semibold splinter-font"
+      >
+        <i class="fas fa-paper-plane mr-2"></i>POST STATUS (24H)
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- View Status Modal -->
+<div
+  id="viewStatusModal"
+  class="fixed inset-0 bg-black hidden items-center justify-center z-50"
+>
+  <div class="w-full max-w-md mx-4">
+    <!-- Status Header -->
+    <div class="flex items-center justify-between p-4">
+      <div class="flex items-center space-x-3">
+        <img
+          id="statusUserImage"
+          src=""
+          alt=""
+          class="w-10 h-10 rounded-full border-2 border-splinter-green object-cover"
+        />
+        <div>
+          <p
+            id="statusUserName"
+            class="font-semibold text-white splinter-font"
+          ></p>
+          <p id="statusTime" class="text-xs text-gray-400"></p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-2">
+        <button
+          id="deleteStatusBtn"
+          onclick="deleteCurrentStatus()"
+          class="p-2 text-red-500 hover:text-red-400 hidden"
+          title="Delete Status"
+        >
+          <i class="fas fa-trash text-lg"></i>
+        </button>
+        <button
+          onclick="closeViewStatusModal()"
+          class="p-2 text-white hover:text-splinter-green"
+        >
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Status Content -->
+    <div
+      id="statusContentDisplay"
+      class="relative mx-4 rounded-lg overflow-hidden"
+      style="height: 500px"
+    >
+      <!-- Status will be loaded here -->
+    </div>
+
+    <!-- View Count (only for own statuses) -->
+    <div id="statusViewCount" class="hidden text-center mt-2">
+      <p class="text-gray-400 text-sm">
+        <i class="fas fa-eye mr-1"></i>
+        <span id="viewCountText">0 views</span>
+      </p>
+    </div>
+
+    <!-- Progress Bars -->
+    <div id="statusProgress" class="flex space-x-1 px-4 mt-4">
+      <!-- Progress bars will be added dynamically -->
+    </div>
+  </div>
+</div>
+
+<!-- Notification Modal -->
+<div
+  id="notificationModal"
+  class="fixed inset-0 bg-black bg-opacity-90 hidden items-center justify-center z-50"
+>
+  <div
+    class="bg-splinter-gray border-2 border-splinter-green rounded-lg p-6 max-w-sm w-full mx-4 glow-border"
+  >
+    <h3
+      class="text-xl font-bold splinter-font text-splinter-green mb-4"
+      id="notificationTitle"
+    >
+      Notification
+    </h3>
+    <p class="text-gray-300 mb-6" id="notificationMessage"></p>
+    <button
+      onclick="closeNotification()"
+      class="w-full py-2 cyber-button rounded-lg text-splinter-green font-semibold"
+    >
+      OK
+    </button>
+  </div>
+</div>
+
+{% endblock %} {% block extra_js %}
+<script>
+  let currentStatuses = [];
+  let currentStatusIndex = 0;
+  let currentUserId = null;
+  let statusTimer = null;
+  let statusDuration = 5000; // 5 seconds per status
+
+  function showNotification(message, title = 'Notification') {
+      document.getElementById('notificationTitle').textContent = title;
+      document.getElementById('notificationMessage').textContent = message;
+      document.getElementById('notificationModal').classList.remove('hidden');
+      document.getElementById('notificationModal').classList.add('flex');
+  }
+
+  function closeNotification() {
+      document.getElementById('notificationModal').classList.add('hidden');
+      document.getElementById('notificationModal').classList.remove('flex');
+  }
+
+  function openCreateStatusModal() {
+      document.getElementById('createStatusModal').classList.remove('hidden');
+      document.getElementById('createStatusModal').classList.add('flex');
+  }
+
+  function closeCreateStatusModal() {
+      document.getElementById('createStatusModal').classList.add('hidden');
+      document.getElementById('createStatusModal').classList.remove('flex');
+  }
+
+  function selectColor(color) {
+      document.getElementById('selectedColor').value = color;
+      // Visual feedback
+      document.querySelectorAll('#createStatusModal button[type="button"]').forEach(btn => {
+          btn.classList.remove('ring-2', 'ring-splinter-green');
+      });
+      event.target.classList.add('ring-2', 'ring-splinter-green');
+  }
+
+  function selectStatusType(type) {
+      // Update buttons
+      const buttons = ['textTypeBtn', 'imageTypeBtn', 'videoTypeBtn', 'audioTypeBtn'];
+      buttons.forEach(btnId => {
+          const btn = document.getElementById(btnId);
+          if (btnId === type + 'TypeBtn') {
+              btn.classList.remove('border-splinter-border', 'text-gray-400');
+              btn.classList.add('border-splinter-green', 'bg-splinter-green', 'text-black');
+          } else {
+              btn.classList.remove('border-splinter-green', 'bg-splinter-green', 'text-black');
+              btn.classList.add('border-splinter-border', 'text-gray-400');
+          }
+      });
+
+      // Update sections
+      document.getElementById('statusType').value = type;
+      
+      if (type === 'text') {
+          document.getElementById('textSection').classList.remove('hidden');
+          document.getElementById('mediaSection').classList.add('hidden');
+          document.getElementById('mediaFile').value = '';
+          document.getElementById('mediaPreview').classList.add('hidden');
+          document.getElementById('uploadPrompt').classList.remove('hidden');
+      } else {
+          document.getElementById('textSection').classList.add('hidden');
+          document.getElementById('mediaSection').classList.remove('hidden');
+          
+          // Update file accept attribute
+          const fileInput = document.getElementById('mediaFile');
+          if (type === 'image') {
+              fileInput.accept = 'image/*';
+          } else if (type === 'video') {
+              fileInput.accept = 'video/*';
+          } else if (type === 'audio') {
+              fileInput.accept = 'audio/*';
+          }
+      }
+  }
+
+  function handleMediaSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      // Check file size (16MB)
+      if (file.size > 16 * 1024 * 1024) {
+          alert('File size must be less than 16MB');
+          event.target.value = '';
+          return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+          const preview = document.getElementById('mediaPreview');
+          const prompt = document.getElementById('uploadPrompt');
+          
+          preview.innerHTML = '';
+          
+          if (file.type.startsWith('image/')) {
+              preview.innerHTML = `<img src="${e.target.result}" class="max-h-64 rounded-lg mx-auto" />`;
+          } else if (file.type.startsWith('video/')) {
+              preview.innerHTML = `<video src="${e.target.result}" controls class="max-h-64 rounded-lg mx-auto"></video>`;
+          } else if (file.type.startsWith('audio/')) {
+              preview.innerHTML = `
+                  <div class="text-center py-8">
+                      <i class="fas fa-music text-6xl text-splinter-green mb-4"></i>
+                      <p class="text-gray-300 mb-4">${file.name}</p>
+                      <audio src="${e.target.result}" controls class="w-full"></audio>
+                  </div>
+              `;
+          }
+          
+          prompt.classList.add('hidden');
+          preview.classList.remove('hidden');
+      };
+      reader.readAsDataURL(file);
+  }
+
+  async function createStatus(event) {
+      event.preventDefault();
+
+      const formData = new FormData();
+      const statusType = document.getElementById('statusType').value;
+
+      if (statusType === 'text') {
+          const content = document.getElementById('statusContent').value.trim();
+          if (!content) {
+              alert('Please enter some text for your status');
+              return;
+          }
+          formData.append('content', content);
+          formData.append('media_type', 'text');
+          formData.append('background_color', document.getElementById('selectedColor').value);
+      } else {
+          // Media status
+          const fileInput = document.getElementById('mediaFile');
+          if (!fileInput.files || !fileInput.files[0]) {
+              alert('Please select a file to upload');
+              return;
+          }
+          
+          formData.append('media_file', fileInput.files[0]);
+          
+          // Optional caption
+          const caption = document.getElementById('mediaCaption').value.trim();
+          if (caption) {
+              formData.append('content', caption);
+          }
+      }
+
+      try {
+          const response = await fetch('/status/create', {
+              method: 'POST',
+              body: formData
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+              closeCreateStatusModal();
+              document.getElementById('statusForm').reset();
+              // Reset UI
+              selectStatusType('text');
+              document.getElementById('mediaPreview').classList.add('hidden');
+              document.getElementById('uploadPrompt').classList.remove('hidden');
+              location.reload();
+          } else {
+              alert(data.error || 'Failed to create status');
+          }
+      } catch (error) {
+          console.error('Error creating status:', error);
+          alert('Failed to create status');
+      }
+  }
+
+  async function viewMyStatuses() {
+      await viewUserStatuses({{ current_user.id }});
+  }
+
+  async function viewUserStatuses(userId) {
+      try {
+          const response = await fetch(`/status/user/${userId}`);
+          const data = await response.json();
+
+          if (data.success && data.statuses.length > 0) {
+              currentStatuses = data.statuses;
+              currentStatusIndex = 0;
+              currentUserId = userId;
+
+              // Set user info
+              document.getElementById('statusUserName').textContent = data.user.username;
+              document.getElementById('statusUserImage').src = `/static/uploads/profiles/${data.user.profile_pic}`;
+              document.getElementById('statusUserImage').onerror = function() {
+                  this.src = `https://ui-avatars.com/api/?name=${data.user.username}&background=00ff41&color=0a0e0f&bold=true`;
+              };
+
+              // Show delete button only for own statuses
+              const deleteBtn = document.getElementById('deleteStatusBtn');
+              if (userId === {{ current_user.id }}) {
+                  deleteBtn.classList.remove('hidden');
+              } else {
+                  deleteBtn.classList.add('hidden');
+              }
+
+              // Create progress bars
+              createProgressBars(data.statuses.length);
+
+              // Show first status
+              showStatus(0);
+
+              // Open modal
+              document.getElementById('viewStatusModal').classList.remove('hidden');
+              document.getElementById('viewStatusModal').classList.add('flex');
+
+              // Start auto-advance timer
+              startStatusTimer();
+          } else {
+              showNotification('No active statuses found', 'Status');
+          }
+      } catch (error) {
+          console.error('Error loading statuses:', error);
+          showNotification('Failed to load statuses', 'Error');
+      }
+  }
+
+  function createProgressBars(count) {
+      const progressContainer = document.getElementById('statusProgress');
+      progressContainer.innerHTML = '';
+
+      for (let i = 0; i < count; i++) {
+          const progressBar = document.createElement('div');
+          progressBar.className = 'flex-1 h-1 bg-gray-600 rounded overflow-hidden';
+          progressBar.innerHTML = `<div id="progress-${i}" class="h-full bg-splinter-green transition-all duration-100" style="width: 0%"></div>`;
+          progressContainer.appendChild(progressBar);
+      }
+  }
+
+  function showStatus(index) {
+      if (index < 0 || index >= currentStatuses.length) {
+          closeViewStatusModal();
+          return;
+      }
+
+      currentStatusIndex = index;
+      const status = currentStatuses[index];
+
+      // Update time display
+      const createdDate = new Date(status.created_at);
+      const now = new Date();
+      const diffMs = now - createdDate;
+      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+      const diffMinutes = Math.floor(diffMs / (1000 * 60));
+
+      let timeText = '';
+      if (diffHours > 0) {
+          timeText = `${diffHours}h ago`;
+      } else if (diffMinutes > 0) {
+          timeText = `${diffMinutes}m ago`;
+      } else {
+          timeText = 'Just now';
+      }
+
+      document.getElementById('statusTime').textContent = timeText;
+
+      // Display status content
+      const contentDisplay = document.getElementById('statusContentDisplay');
+
+      if (status.media_type === 'text') {
+          contentDisplay.innerHTML = `
+              <div class="w-full h-full flex items-center justify-center p-8"
+                   style="background: ${status.background_color}">
+                  <p class="text-white text-2xl font-semibold text-center break-words">${escapeHtml(status.content)}</p>
+              </div>
+          `;
+      } else if (status.media_type === 'image') {
+          contentDisplay.innerHTML = `
+              <div class="w-full h-full flex items-center justify-center bg-black">
+                  <img src="${status.media_url}" alt="Status" class="max-w-full max-h-full object-contain">
+              </div>
+          `;
+      } else if (status.media_type === 'video') {
+          contentDisplay.innerHTML = `
+              <div class="w-full h-full flex items-center justify-center bg-black">
+                  <video src="${status.media_url}" class="max-w-full max-h-full object-contain" autoplay loop muted></video>
+              </div>
+          `;
+      } else if (status.media_type === 'audio') {
+          contentDisplay.innerHTML = `
+              <div class="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-splinter-bg to-black p-8">
+                  <div class="mb-8 animate-pulse">
+                      <i class="fas fa-music text-8xl text-splinter-green"></i>
+                  </div>
+                  ${status.content ? `<p class="text-white text-xl text-center mb-6">${escapeHtml(status.content)}</p>` : ''}
+                  <audio src="${status.media_url}" controls autoplay class="w-full max-w-md cyber-audio"></audio>
+              </div>
+          `;
+      }
+
+      // Mark as viewed
+      markStatusAsViewed(status.id);
+
+      // Update view count display (only for own statuses)
+      const viewCountDiv = document.getElementById('statusViewCount');
+      if (currentUserId === {{ current_user.id }}) {
+          const viewCount = status.view_count || 0;
+          document.getElementById('viewCountText').textContent = viewCount === 1 ? '1 view' : `${viewCount} views`;
+          viewCountDiv.classList.remove('hidden');
+      } else {
+          viewCountDiv.classList.add('hidden');
+      }
+
+      // Update progress bars
+      updateProgressBars(index);
+
+      // Add click handlers for navigation
+      contentDisplay.onclick = null; // Remove previous handlers
+      contentDisplay.addEventListener('click', handleStatusClick);
+  }
+
+  function handleStatusClick(event) {
+      const rect = event.currentTarget.getBoundingClientRect();
+      const clickX = event.clientX - rect.left;
+      const halfWidth = rect.width / 2;
+
+      if (clickX < halfWidth) {
+          // Clicked left side - previous status
+          previousStatus();
+      } else {
+          // Clicked right side - next status
+          nextStatus();
+      }
+  }
+
+  function nextStatus() {
+      clearTimeout(statusTimer);
+
+      if (currentStatusIndex < currentStatuses.length - 1) {
+          showStatus(currentStatusIndex + 1);
+          startStatusTimer();
+      } else {
+          closeViewStatusModal();
+      }
+  }
+
+  function previousStatus() {
+      clearTimeout(statusTimer);
+
+      if (currentStatusIndex > 0) {
+          showStatus(currentStatusIndex - 1);
+          startStatusTimer();
+      }
+  }
+
+  function updateProgressBars(currentIndex) {
+      // Reset all progress bars
+      for (let i = 0; i < currentStatuses.length; i++) {
+          const progressBar = document.getElementById(`progress-${i}`);
+          if (progressBar) {
+              if (i < currentIndex) {
+                  progressBar.style.width = '100%';
+              } else if (i === currentIndex) {
+                  progressBar.style.width = '0%';
+                  // Animate current progress bar
+                  setTimeout(() => {
+                      progressBar.style.transition = `width ${statusDuration}ms linear`;
+                      progressBar.style.width = '100%';
+                  }, 50);
+              } else {
+                  progressBar.style.width = '0%';
+              }
+          }
+      }
+  }
+
+  function startStatusTimer() {
+      clearTimeout(statusTimer);
+      statusTimer = setTimeout(() => {
+          nextStatus();
+      }, statusDuration);
+  }
+
+  async function markStatusAsViewed(statusId) {
+      try {
+          await fetch(`/status/view/${statusId}`, {
+              method: 'POST'
+          });
+      } catch (error) {
+          console.error('Error marking status as viewed:', error);
+      }
+  }
+
+  function closeViewStatusModal() {
+      clearTimeout(statusTimer);
+      document.getElementById('viewStatusModal').classList.add('hidden');
+      document.getElementById('viewStatusModal').classList.remove('flex');
+
+      // Optionally reload to update view counts
+      if (currentUserId !== {{ current_user.id }}) {
+          location.reload();
+      }
+  }
+
+  function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+  }
+
+  async function deleteCurrentStatus() {
+      if (!currentStatuses[currentStatusIndex]) return;
+
+      const statusId = currentStatuses[currentStatusIndex].id;
+
+      if (confirm('Delete this status? This action cannot be undone.')) {
+          try {
+              const response = await fetch(`/status/delete/${statusId}`, {
+                  method: 'POST'
+              });
+
+              const data = await response.json();
+
+              if (data.success) {
+                  // Remove from current array
+                  currentStatuses.splice(currentStatusIndex, 1);
+
+                  if (currentStatuses.length === 0) {
+                      // No more statuses, close modal and reload
+                      closeViewStatusModal();
+                      location.reload();
+                  } else {
+                      // Show next status or previous if at end
+                      if (currentStatusIndex >= currentStatuses.length) {
+                          currentStatusIndex = currentStatuses.length - 1;
+                      }
+
+                      // Recreate progress bars and show current status
+                      createProgressBars(currentStatuses.length);
+                      showStatus(currentStatusIndex);
+                      startStatusTimer();
+                  }
+              } else {
+                  showNotification('Failed to delete status', 'Error');
+              }
+          } catch (error) {
+              console.error('Error deleting status:', error);
+              showNotification('Failed to delete status', 'Error');
+          }
+      }
+  }
+
+  // Keyboard navigation
+  document.addEventListener('keydown', function(event) {
+      const modal = document.getElementById('viewStatusModal');
+      if (!modal.classList.contains('hidden')) {
+          if (event.key === 'ArrowLeft') {
+              previousStatus();
+          } else if (event.key === 'ArrowRight' || event.key === ' ') {
+              event.preventDefault();
+              nextStatus();
+          } else if (event.key === 'Escape') {
+              closeViewStatusModal();
+          }
+      }
+  });
+</script>
+
+<style>
+  .cyber-audio {
+      background: rgba(0, 255, 65, 0.1);
+      border: 2px solid #00ff41;
+      border-radius: 8px;
+      padding: 8px;
+      box-shadow: 0 0 15px rgba(0, 255, 65, 0.3);
+  }
+  
+  .cyber-audio::-webkit-media-controls-panel {
+      background: rgba(10, 14, 15, 0.9);
+  }
+  
+  .cyber-audio::-webkit-media-controls-current-time-display,
+  .cyber-audio::-webkit-media-controls-time-remaining-display {
+      color: #00ff41;
+  }
+
+  @keyframes pulse-animation {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+  }
+
+  .animate-pulse i {
+      animation: pulse-animation 2s ease-in-out infinite;
+  }
+</style>
+{% endblock %}

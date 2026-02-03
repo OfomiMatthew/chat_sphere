@@ -1,0 +1,567 @@
+{% extends 'base.html' %} {% block title %}Chat - ChatSphere{% endblock %} {%
+block content %}
+<div class="h-screen flex overflow-hidden bg-splinter-darker">
+  <!-- Left Sidebar -->
+  <div
+    class="w-full md:w-96 border-r border-splinter-border flex flex-col bg-splinter-dark"
+  >
+    <!-- User Header -->
+    <div
+      class="p-4 bg-splinter-gray border-b border-splinter-border flex items-center justify-between glow-border"
+    >
+      <div class="flex items-center space-x-3">
+        <div class="relative">
+          <img
+            src="{{ url_for('static', filename='uploads/profiles/' + current_user.profile_pic) }}"
+            alt="{{ current_user.username }}"
+            class="w-12 h-12 rounded-full border-2 border-splinter-green pulse-glow object-cover"
+            onerror="this.src='https://ui-avatars.com/api/?name={{ current_user.username }}&background=00ff41&color=0a0e0f&bold=true'"
+          />
+          <span
+            class="absolute bottom-0 right-0 w-3 h-3 bg-splinter-green rounded-full border-2 border-splinter-gray"
+          ></span>
+        </div>
+        <span class="font-semibold text-splinter-green splinter-font"
+          >{{ current_user.username }}</span
+        >
+      </div>
+
+      <div class="flex space-x-2">
+        <a
+          href="{{ url_for('status.index') }}"
+          class="p-2 hover-glow rounded-full border border-splinter-border transition"
+          title="View Status"
+        >
+          <i class="fas fa-circle-notch text-splinter-green"></i>
+        </a>
+        <button
+          onclick="openNewChatModal()"
+          class="p-2 hover-glow rounded-full border border-splinter-border transition"
+        >
+          <i class="fas fa-comment-medical text-splinter-green"></i>
+        </button>
+        <button
+          onclick="openGroupModal()"
+          class="p-2 hover-glow rounded-full border border-splinter-border transition"
+        >
+          <i class="fas fa-users text-splinter-green"></i>
+        </button>
+        <button
+          onclick="showProfileMenu()"
+          class="p-2 hover-glow rounded-full border border-splinter-border transition"
+        >
+          <i class="fas fa-ellipsis-v text-splinter-green"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="p-3 border-b border-splinter-border">
+      <div class="relative">
+        <input
+          type="text"
+          id="searchChats"
+          class="w-full pl-10 pr-4 py-2 cyber-input rounded-full text-sm"
+          placeholder="Search or start new chat..."
+        />
+        <i class="fas fa-search absolute left-3 top-3 text-splinter-green"></i>
+      </div>
+    </div>
+
+    <!-- Chat List -->
+    <div class="flex-1 overflow-y-auto">
+      {% if conversations %} {% for conv in conversations %}
+      <div
+        class="conversation-item p-3 border-b border-splinter-border hover:bg-splinter-gray cursor-pointer transition hover-glow"
+        onclick="openChat('{{ conv.type }}', {{ conv.user.id if conv.type == 'direct' else conv.group.id }})"
+      >
+        <div class="flex items-center space-x-3">
+          <div class="relative flex-shrink-0">
+            {% if conv.type == 'direct' %}
+            <img
+              src="{{ url_for('static', filename='uploads/profiles/' + conv.user.profile_pic) }}"
+              alt="{{ conv.user.username }}"
+              class="w-12 h-12 rounded-full border border-splinter-green object-cover"
+              onerror="this.src='https://ui-avatars.com/api/?name={{ conv.user.username }}&background=00ff41&color=0a0e0f&bold=true'"
+            />
+            {% if conv.user.is_online %}
+            <span
+              class="absolute bottom-0 right-0 w-3 h-3 bg-splinter-green rounded-full border-2 border-splinter-dark"
+            ></span>
+            {% endif %} {% else %}
+            <div
+              class="w-12 h-12 rounded-full bg-splinter-gray border border-splinter-green flex items-center justify-center"
+            >
+              <i class="fas fa-users text-splinter-green"></i>
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="flex-1 min-w-0">
+            <div class="flex justify-between items-center mb-1">
+              <h3 class="font-semibold text-gray-100 truncate splinter-font">
+                {{ conv.user.username if conv.type == 'direct' else
+                conv.group.name }}
+              </h3>
+              <span class="text-xs text-splinter-green splinter-font">
+                {{ conv.last_message.timestamp.strftime('%H:%M') }}
+              </span>
+            </div>
+            <div class="flex justify-between items-center">
+              <p class="text-sm text-gray-400 truncate">
+                {% if conv.last_message.sender_id and
+                conv.last_message.sender_id == current_user.id %}
+                <i class="fas fa-check-double text-splinter-green mr-1"></i>
+                {% endif %} {% if conv.last_message.message_type == 'text' %} {%
+                if conv.last_message.content %} {{
+                conv.last_message.content[:30] }}{% if
+                conv.last_message.content|length > 30 %}...{% endif %} {% endif
+                %} {% else %}
+                <i
+                  class="fas fa-{% if conv.last_message.message_type == 'image' %}image{% elif conv.last_message.message_type == 'video' %}video{% elif conv.last_message.message_type == 'audio' %}microphone{% else %}file{% endif %} mr-1"
+                ></i>
+                {{ conv.last_message.message_type.title() }} {% endif %}
+              </p>
+              {% if conv.unread_count > 0 %}
+              <span
+                class="bg-splinter-green text-splinter-darker text-xs font-bold px-2 py-1 rounded-full glow-text"
+              >
+                {{ conv.unread_count }}
+              </span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %} {% else %}
+      <div
+        class="flex flex-col items-center justify-center h-full text-center p-8"
+      >
+        <i
+          class="fas fa-comment-slash text-6xl text-splinter-green mb-4 opacity-50"
+        ></i>
+        <p class="text-gray-400 splinter-font">No conversations yet</p>
+        <p class="text-sm text-gray-500 mt-2">Start a new chat to begin</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Main Chat Area -->
+  <div class="flex-1 flex flex-col bg-splinter-darker">
+    <!-- Welcome Screen -->
+    <div
+      id="welcomeScreen"
+      class="flex-1 flex flex-col items-center justify-center text-center px-8"
+    >
+      <div class="scan-line mb-8">
+        <i
+          class="fas fa-terminal text-8xl text-splinter-green glow-text mb-6"
+        ></i>
+      </div>
+      <h2
+        class="text-4xl font-bold splinter-font text-splinter-green glow-text mb-4"
+      >
+        SECURE CHAT PROTOCOL
+      </h2>
+      <p
+        class="text-gray-400 max-w-md splinter-font uppercase tracking-widest text-sm"
+      >
+        Select a conversation or initiate new encrypted communication channel
+      </p>
+      <div class="mt-12 grid grid-cols-3 gap-6 max-w-2xl">
+        <div
+          class="p-6 bg-splinter-gray rounded-lg border border-splinter-border glow-border"
+        >
+          <i class="fas fa-shield-alt text-3xl text-splinter-green mb-3"></i>
+          <p class="text-sm text-gray-400">End-to-End Encrypted</p>
+        </div>
+        <div
+          class="p-6 bg-splinter-gray rounded-lg border border-splinter-border glow-border"
+        >
+          <i class="fas fa-bolt text-3xl text-splinter-green mb-3"></i>
+          <p class="text-sm text-gray-400">Real-Time Messaging</p>
+        </div>
+        <div
+          class="p-6 bg-splinter-gray rounded-lg border border-splinter-border glow-border"
+        >
+          <i class="fas fa-video text-3xl text-splinter-green mb-3"></i>
+          <p class="text-sm text-gray-400">Voice & Video Calls</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- New Chat Modal -->
+<div
+  id="newChatModal"
+  class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center z-50"
+>
+  <div
+    class="bg-splinter-gray border-2 border-splinter-green rounded-lg p-6 max-w-md w-full mx-4 glow-border"
+  >
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-xl font-bold splinter-font text-splinter-green">
+        NEW CHAT
+      </h3>
+      <button
+        onclick="closeNewChatModal()"
+        class="text-gray-400 hover:text-splinter-green"
+      >
+        <i class="fas fa-times text-xl"></i>
+      </button>
+    </div>
+    <div class="space-y-2 max-h-96 overflow-y-auto">
+      {% for user in users %}
+      <div
+        class="flex items-center space-x-3 p-3 hover:bg-splinter-dark rounded-lg cursor-pointer hover-glow transition"
+        onclick="startChat({{ user.id }})"
+      >
+        <img
+          src="{{ url_for('static', filename='uploads/profiles/' + user.profile_pic) }}"
+          alt="{{ user.username }}"
+          class="w-10 h-10 rounded-full border border-splinter-green object-cover"
+          onerror="this.src='https://ui-avatars.com/api/?name={{ user.username }}&background=00ff41&color=0a0e0f&bold=true'"
+        />
+        <div class="flex-1">
+          <p class="font-semibold text-gray-100">{{ user.username }}</p>
+          <p class="text-sm text-gray-400">{{ user.about[:30] }}...</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- Group Modal -->
+<div
+  id="groupModal"
+  class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center z-50"
+>
+  <div
+    class="bg-splinter-gray border-2 border-splinter-green rounded-lg p-6 max-w-md w-full mx-4 glow-border"
+  >
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-xl font-bold splinter-font text-splinter-green">
+        CREATE GROUP
+      </h3>
+      <button
+        onclick="closeGroupModal()"
+        class="text-gray-400 hover:text-splinter-green"
+      >
+        <i class="fas fa-times text-xl"></i>
+      </button>
+    </div>
+    <form id="createGroupForm" onsubmit="createGroup(event)">
+      <div class="mb-4">
+        <label class="block text-splinter-green text-sm mb-2 splinter-font"
+          >GROUP NAME</label
+        >
+        <input
+          type="text"
+          id="groupName"
+          required
+          class="w-full px-4 py-2 cyber-input rounded-lg text-gray-100"
+          placeholder="Enter group name"
+        />
+      </div>
+      <div class="mb-4">
+        <label class="block text-splinter-green text-sm mb-2 splinter-font"
+          >DESCRIPTION</label
+        >
+        <textarea
+          id="groupDesc"
+          class="w-full px-4 py-2 cyber-input rounded-lg text-gray-100"
+          placeholder="Optional description"
+          rows="2"
+        ></textarea>
+      </div>
+      <div class="mb-4">
+        <label class="block text-splinter-green text-sm mb-2 splinter-font"
+          >ADD MEMBERS</label
+        >
+        <div class="space-y-2 max-h-48 overflow-y-auto">
+          {% for user in users %}
+          <label
+            class="flex items-center space-x-3 p-2 hover:bg-splinter-dark rounded cursor-pointer"
+          >
+            <input
+              type="checkbox"
+              name="members"
+              value="{{ user.id }}"
+              class="form-checkbox text-splinter-green border-splinter-border"
+            />
+            <img
+              src="{{ url_for('static', filename='uploads/profiles/' + user.profile_pic) }}"
+              alt="{{ user.username }}"
+              class="w-8 h-8 rounded-full border border-splinter-green object-cover"
+              onerror="this.src='https://ui-avatars.com/api/?name={{ user.username }}&background=00ff41&color=0a0e0f&bold=true'"
+            />
+            <span class="text-gray-100">{{ user.username }}</span>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+      <button
+        type="submit"
+        class="w-full py-2 cyber-button rounded-lg text-splinter-green font-semibold splinter-font"
+      >
+        <i class="fas fa-users mr-2"></i>CREATE GROUP
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Status Modal -->
+<div
+  id="statusModal"
+  class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center z-50"
+>
+  <div
+    class="bg-splinter-gray border-2 border-splinter-green rounded-lg p-6 max-w-md w-full mx-4 glow-border"
+  >
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-xl font-bold splinter-font text-splinter-green">
+        POST STATUS
+      </h3>
+      <button
+        onclick="closeStatusModal()"
+        class="text-gray-400 hover:text-splinter-green"
+      >
+        <i class="fas fa-times text-xl"></i>
+      </button>
+    </div>
+    <form id="createStatusForm" onsubmit="createStatus(event)">
+      <div class="mb-4">
+        <label class="block text-splinter-green text-sm mb-2 splinter-font"
+          >STATUS TEXT</label
+        >
+        <textarea
+          id="statusContent"
+          required
+          class="w-full px-4 py-2 cyber-input rounded-lg text-gray-100"
+          placeholder="What's on your mind?"
+          rows="3"
+        ></textarea>
+      </div>
+      <button
+        type="submit"
+        class="w-full py-2 cyber-button rounded-lg text-splinter-green font-semibold splinter-font"
+      >
+        <i class="fas fa-paper-plane mr-2"></i>POST STATUS
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Notification Modal -->
+<div
+  id="notificationModal"
+  class="fixed inset-0 bg-black bg-opacity-90 hidden items-center justify-center z-50"
+>
+  <div
+    class="bg-splinter-gray border-2 border-splinter-green rounded-lg p-6 max-w-sm w-full mx-4 glow-border"
+  >
+    <h3
+      class="text-xl font-bold splinter-font text-splinter-green mb-4"
+      id="notificationTitle"
+    >
+      Notification
+    </h3>
+    <p class="text-gray-300 mb-6" id="notificationMessage"></p>
+    <button
+      onclick="closeNotification()"
+      class="w-full py-2 cyber-button rounded-lg text-splinter-green font-semibold"
+    >
+      OK
+    </button>
+  </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div
+  id="confirmationModal"
+  class="fixed inset-0 bg-black bg-opacity-90 hidden items-center justify-center z-50"
+>
+  <div
+    class="bg-splinter-gray border-2 border-splinter-green rounded-lg p-6 max-w-sm w-full mx-4 glow-border"
+  >
+    <h3 class="text-xl font-bold splinter-font text-splinter-green mb-4">
+      Confirm
+    </h3>
+    <p class="text-gray-300 mb-6" id="confirmationMessage"></p>
+    <div class="flex space-x-3">
+      <button
+        onclick="closeConfirmation()"
+        class="flex-1 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg text-gray-100 transition"
+      >
+        Cancel
+      </button>
+      <button
+        id="confirmYes"
+        class="flex-1 py-2 cyber-button rounded-lg text-splinter-green font-semibold"
+      >
+        Yes
+      </button>
+    </div>
+  </div>
+</div>
+
+{% endblock %} {% block extra_js %}
+<script>
+  function openChat(type, id) {
+    if (type === "direct") {
+      window.location.href = `/chat/user/${id}`;
+    } else {
+      window.location.href = `/chat/group/${id}`;
+    }
+  }
+
+  function startChat(userId) {
+    window.location.href = `/chat/user/${userId}`;
+  }
+
+  function openNewChatModal() {
+    document.getElementById("newChatModal").classList.remove("hidden");
+    document.getElementById("newChatModal").classList.add("flex");
+  }
+
+  function closeNewChatModal() {
+    document.getElementById("newChatModal").classList.add("hidden");
+    document.getElementById("newChatModal").classList.remove("flex");
+  }
+
+  function openGroupModal() {
+    document.getElementById("groupModal").classList.remove("hidden");
+    document.getElementById("groupModal").classList.add("flex");
+  }
+
+  function closeGroupModal() {
+    document.getElementById("groupModal").classList.add("hidden");
+    document.getElementById("groupModal").classList.remove("flex");
+  }
+
+  function openStatusModal() {
+    document.getElementById("statusModal").classList.remove("hidden");
+    document.getElementById("statusModal").classList.add("flex");
+  }
+
+  function closeStatusModal() {
+    document.getElementById("statusModal").classList.add("hidden");
+    document.getElementById("statusModal").classList.remove("flex");
+  }
+
+  function showProfileMenu() {
+    showConfirmation("View profile settings?", function () {
+      window.location.href = "/profile";
+    });
+  }
+
+  function showNotification(message, title = "Notification") {
+    document.getElementById("notificationTitle").textContent = title;
+    document.getElementById("notificationMessage").textContent = message;
+    document.getElementById("notificationModal").classList.remove("hidden");
+    document.getElementById("notificationModal").classList.add("flex");
+  }
+
+  function closeNotification() {
+    document.getElementById("notificationModal").classList.add("hidden");
+    document.getElementById("notificationModal").classList.remove("flex");
+  }
+
+  function showConfirmation(message, onConfirm) {
+    document.getElementById("confirmationMessage").textContent = message;
+    document.getElementById("confirmYes").onclick = function () {
+      closeConfirmation();
+      if (onConfirm) onConfirm();
+    };
+    document.getElementById("confirmationModal").classList.remove("hidden");
+    document.getElementById("confirmationModal").classList.add("flex");
+  }
+
+  function closeConfirmation() {
+    document.getElementById("confirmationModal").classList.add("hidden");
+    document.getElementById("confirmationModal").classList.remove("flex");
+  }
+
+  async function createGroup(event) {
+    event.preventDefault();
+
+    const name = document.getElementById("groupName").value;
+    const description = document.getElementById("groupDesc").value;
+    const memberCheckboxes = document.querySelectorAll(
+      'input[name="members"]:checked',
+    );
+    const members = Array.from(memberCheckboxes).map((cb) =>
+      parseInt(cb.value),
+    );
+
+    const response = await fetch("/chat/create-group", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, description, members }),
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      window.location.href = `/chat/group/${data.group_id}`;
+    }
+  }
+
+  async function createStatus(event) {
+    event.preventDefault();
+
+    const formData = new FormData();
+    formData.append("content", document.getElementById("statusContent").value);
+    formData.append("media_type", "text");
+    formData.append("background_color", "#075E54");
+
+    const response = await fetch("/status/create", {
+      method: "POST",
+      body: formData,
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      closeStatusModal();
+      document.getElementById("createStatusForm").reset();
+      showNotification(
+        "Status posted successfully! Visible for 24 hours.",
+        "Success",
+      );
+    }
+  }
+
+  // Search functionality
+  document
+    .getElementById("searchChats")
+    .addEventListener("input", function (e) {
+      const search = e.target.value.toLowerCase();
+      const items = document.querySelectorAll(".conversation-item");
+
+      items.forEach((item) => {
+        const text = item.textContent.toLowerCase();
+        item.style.display = text.includes(search) ? "block" : "none";
+      });
+    });
+
+  // Real-time updates
+  socket.on("new_message", function (data) {
+    // Refresh conversation list or update UI
+    location.reload();
+  });
+
+  socket.on("user_online", function (data) {
+    // Update online status indicators
+    console.log("User online:", data.user_id);
+  });
+
+  socket.on("user_offline", function (data) {
+    // Update offline status indicators
+    console.log("User offline:", data.user_id);
+  });
+</script>
+{% endblock %}
