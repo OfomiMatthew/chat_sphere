@@ -803,6 +803,102 @@ with {{ chat_user.username }}{% else %}{{ group.name }}{% endif %} - ChatSphere
   </div>
 </div>
 
+<!-- Emoji Picker Modal -->
+<div
+  id="emojiPickerModal"
+  class="fixed inset-0 bg-black bg-opacity-90 hidden items-center justify-center z-50"
+>
+  <div
+    class="bg-splinter-gray border-2 border-splinter-green rounded-lg p-6 max-w-lg w-full mx-4 glow-border"
+  >
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-xl font-bold splinter-font text-splinter-green">
+        SELECT EMOJI
+      </h3>
+      <button
+        onclick="closeEmojiPicker()"
+        class="text-gray-400 hover:text-splinter-green"
+      >
+        <i class="fas fa-times text-xl"></i>
+      </button>
+    </div>
+
+    <!-- Emoji Categories -->
+    <div class="flex space-x-2 mb-4 overflow-x-auto pb-2">
+      <button
+        onclick="showEmojiCategory('smileys')"
+        class="emoji-category-btn px-3 py-2 rounded bg-splinter-green text-black transition"
+        data-category="smileys"
+      >
+        😀
+      </button>
+      <button
+        onclick="showEmojiCategory('gestures')"
+        class="emoji-category-btn px-3 py-2 rounded bg-gray-700 hover:bg-gray-600 transition"
+        data-category="gestures"
+      >
+        👋
+      </button>
+      <button
+        onclick="showEmojiCategory('hearts')"
+        class="emoji-category-btn px-3 py-2 rounded bg-gray-700 hover:bg-gray-600 transition"
+        data-category="hearts"
+      >
+        ❤️
+      </button>
+      <button
+        onclick="showEmojiCategory('animals')"
+        class="emoji-category-btn px-3 py-2 rounded bg-gray-700 hover:bg-gray-600 transition"
+        data-category="animals"
+      >
+        🐶
+      </button>
+      <button
+        onclick="showEmojiCategory('food')"
+        class="emoji-category-btn px-3 py-2 rounded bg-gray-700 hover:bg-gray-600 transition"
+        data-category="food"
+      >
+        🍕
+      </button>
+      <button
+        onclick="showEmojiCategory('activities')"
+        class="emoji-category-btn px-3 py-2 rounded bg-gray-700 hover:bg-gray-600 transition"
+        data-category="activities"
+      >
+        ⚽
+      </button>
+      <button
+        onclick="showEmojiCategory('travel')"
+        class="emoji-category-btn px-3 py-2 rounded bg-gray-700 hover:bg-gray-600 transition"
+        data-category="travel"
+      >
+        🚗
+      </button>
+      <button
+        onclick="showEmojiCategory('objects')"
+        class="emoji-category-btn px-3 py-2 rounded bg-gray-700 hover:bg-gray-600 transition"
+        data-category="objects"
+      >
+        💡
+      </button>
+      <button
+        onclick="showEmojiCategory('symbols')"
+        class="emoji-category-btn px-3 py-2 rounded bg-gray-700 hover:bg-gray-600 transition"
+        data-category="symbols"
+      >
+        🔥
+      </button>
+    </div>
+
+    <!-- Emoji Grid -->
+    <div class="max-h-96 overflow-y-auto bg-splinter-darker rounded-lg p-4">
+      <div id="emojiGrid" class="grid grid-cols-8 gap-2">
+        <!-- Emojis will be populated here -->
+      </div>
+    </div>
+  </div>
+</div>
+
 {% endblock %} {% block extra_js %}
 <script>
   const chatType = '{{ chat_type }}';
@@ -1623,10 +1719,65 @@ with {{ chat_user.username }}{% else %}{{ group.name }}{% endif %} - ChatSphere
   }
 
   function showEmojiPicker() {
-      const emojis = ['😀', '😂', '❤️', '👍', '🎉', '🔥', '💯', '👋', '🤔', '😎', '🙏', '💪'];
+      // Show the emoji picker modal
+      document.getElementById('emojiPickerModal').classList.remove('hidden');
+      document.getElementById('emojiPickerModal').classList.add('flex');
+
+      // Show default category (smileys)
+      showEmojiCategory('smileys');
+  }
+
+  function closeEmojiPicker() {
+      document.getElementById('emojiPickerModal').classList.add('hidden');
+      document.getElementById('emojiPickerModal').classList.remove('flex');
+  }
+
+  // Emoji collections by category
+  const emojiCategories = {
+      smileys: ['😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '🙃', '😉', '😊', '😇', '🥰', '😍', '🤩', '😘', '😗', '😚', '😙', '🥲', '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭', '🤫', '🤔', '🤐', '🤨', '😐', '😑', '😶', '😏', '😒', '🙄', '😬', '🤥', '😌', '😔', '😪', '🤤', '😴', '😷', '🤒', '🤕', '🤢', '🤮', '🤧', '🥵', '🥶', '😎', '🤓', '🧐', '😕', '😟', '🙁', '😮', '😯', '😲', '😳', '🥺', '😦', '😧', '😨', '😰', '😥', '😢', '😭', '😱', '😖', '😣', '😞', '😓', '😩', '😫', '🥱', '😤', '😡', '😠', '🤬'],
+      gestures: ['👋', '🤚', '🖐', '✋', '🖖', '👌', '🤌', '🤏', '✌️', '🤞', '🤟', '🤘', '🤙', '👈', '👉', '👆', '🖕', '👇', '☝️', '👍', '👎', '✊', '👊', '🤛', '🤜', '👏', '🙌', '👐', '🤲', '🤝', '🙏', '✍️', '💅', '🤳', '💪', '🦾', '🦿', '🦵', '🦶', '👂', '🦻', '👃', '🧠', '🫀', '🫁', '🦷', '🦴', '👀', '👁', '👅', '👄'],
+      hearts: ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟', '☮️', '✝️', '☪️', '🕉', '☸️', '✡️', '🔯', '🕎', '☯️', '☦️', '🛐', '⛎', '♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓'],
+      animals: ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐽', '🐸', '🐵', '🙈', '🙉', '🙊', '🐒', '🐔', '🐧', '🐦', '🐤', '🐣', '🐥', '🦆', '🦅', '🦉', '🦇', '🐺', '🐗', '🐴', '🦄', '🐝', '🐛', '🦋', '🐌', '🐞', '🐜', '🦟', '🦗', '🕷', '🕸', '🦂', '🐢', '🐍', '🦎', '🦖', '🦕', '🐙', '🦑', '🦐', '🦞', '🦀', '🐡', '🐠', '🐟', '🐬', '🐳', '🐋', '🦈', '🐊', '🐅', '🐆', '🦓', '🦍', '🦧', '🐘', '🦛', '🦏', '🐪', '🐫', '🦒', '🦘', '🐃', '🐂', '🐄', '🐎', '🐖', '🐏', '🐑', '🦙', '🐐', '🦌', '🐕', '🐩', '🦮', '🐕‍🦺', '🐈', '🐓', '🦃', '🦚', '🦜', '🦢', '🦩', '🕊', '🐇', '🦝', '🦨', '🦡', '🦦', '🦥', '🐁', '🐀', '🐿', '🦔'],
+      food: ['🍕', '🍔', '🍟', '🌭', '🍿', '🧈', '🧇', '🥓', '🥚', '🍳', '🧆', '🥘', '🍲', '🥣', '🥗', '🍿', '🧈', '🧂', '🥫', '🍱', '🍘', '🍙', '🍚', '🍛', '🍜', '🍝', '🍠', '🍢', '🍣', '🍤', '🍥', '🥮', '🍡', '🥟', '🥠', '🥡', '🦀', '🦞', '🦐', '🦑', '🦪', '🍦', '🍧', '🍨', '🍩', '🍪', '🎂', '🍰', '🧁', '🥧', '🍫', '🍬', '🍭', '🍮', '🍯', '🍼', '🥛', '☕', '🫖', '🍵', '🍶', '🍾', '🍷', '🍸', '🍹', '🍺', '🍻', '🥂', '🥃', '🥤', '🧃', '🧉', '🧊', '🥢', '🍽', '🍴', '🥄', '🔪'],
+      activities: ['⚽', '🏀', '🏈', '⚾', '🥎', '🎾', '🏐', '🏉', '🥏', '🎱', '🪀', '🏓', '🏸', '🏒', '🏑', '🥍', '🏏', '🥅', '⛳', '🪁', '🏹', '🎣', '🤿', '🥊', '🥋', '🎽', '🛹', '🛷', '⛸', '🥌', '🎿', '⛷', '🏂', '🪂', '🏋️', '🤼', '🤸', '🤺', '⛹️', '🤾', '🏌️', '🏇', '🧘', '🏊', '🤽', '🚣', '🧗', '🚵', '🚴', '🏆', '🥇', '🥈', '🥉', '🏅', '🎖', '🎗', '🏵', '🎫', '🎟', '🎪', '🤹', '🎭', '🩰', '🎨', '🎬', '🎤', '🎧', '🎼', '🎹', '🥁', '🎷', '🎺', '🎸', '🪕', '🎻', '🎲', '♟', '🎯', '🎳', '🎮', '🎰', '🧩'],
+      travel: ['🚗', '🚕', '🚙', '🚌', '🚎', '🏎', '🚓', '🚑', '🚒', '🚐', '🛻', '🚚', '🚛', '🚜', '🦯', '🦽', '🦼', '🛴', '🚲', '🛵', '🏍', '🛺', '🚨', '🚔', '🚍', '🚘', '🚖', '🚡', '🚠', '🚟', '🚃', '🚋', '🚞', '🚝', '🚄', '🚅', '🚈', '🚂', '🚆', '🚇', '🚊', '🚉', '✈️', '🛫', '🛬', '🛩', '💺', '🛰', '🚀', '🛸', '🚁', '🛶', '⛵', '🚤', '🛥', '🛳', '⛴', '🚢', '⚓', '⛽', '🚧', '🚦', '🚥', '🚏', '🗺', '🗿', '🗽', '🗼', '🏰', '🏯', '🏟', '🎡', '🎢', '🎠', '⛲', '⛱', '🏖', '🏝', '🏜', '🌋', '⛰', '🏔', '🗻', '🏕', '⛺', '🏠', '🏡', '🏘', '🏚', '🏗', '🏭', '🏢', '🏬', '🏣', '🏤', '🏥', '🏦', '🏨', '🏪', '🏫', '🏩', '💒', '🏛', '⛪', '🕌', '🕍', '🛕', '🕋'],
+      objects: ['💡', '🔦', '🕯', '🪔', '🧯', '🛢', '💸', '💵', '💴', '💶', '💷', '💰', '💳', '🪙', '💎', '⚖️', '🪜', '🧰', '🪛', '🔧', '🔨', '⚒', '🛠', '⛏', '🪚', '🔩', '⚙️', '🪤', '🧱', '⛓', '🧲', '🔫', '💣', '🧨', '🪓', '🔪', '🗡', '⚔️', '🛡', '🚬', '⚰️', '🪦', '⚱️', '🏺', '🔮', '📿', '🧿', '💈', '⚗️', '🔭', '🔬', '🕳', '🩹', '🩺', '💊', '💉', '🩸', '🧬', '🦠', '🧫', '🧪', '🌡', '🧹', '🪠', '🧺', '🧻', '🚽', '🚰', '🚿', '🛁', '🛀', '🧼', '🪒', '🧽', '🪥', '🧴', '🛎', '🔑', '🗝', '🚪', '🪑', '🛋', '🛏', '🧸', '🪆', '🖼', '🪞', '🪟', '🛍', '🎁', '🎈', '🎏', '🎀', '🪄', '🪅', '🎊', '🎉', '🪩', '🎎', '🏮', '🎐', '🧧', '✉️', '📩', '📨', '📧', '💌', '📥', '📤', '📦', '🏷', '🪧', '📪', '📫', '📬', '📭', '📮', '📯', '📜', '📃', '📄', '📑', '🧾', '📊', '📈', '📉', '🗒', '🗓', '📆', '📅', '🗑', '📇', '🗃', '🗳', '🗄', '📋', '📁', '📂', '🗂', '🗞', '📰', '📓', '📔', '📒', '📕', '📗', '📘', '📙', '📚', '📖', '🔖', '🧷', '🔗', '📎', '🖇', '📐', '📏', '🧮', '📌', '📍', '✂️', '🖊', '🖋', '✒️', '🖌', '🖍', '📝', '✏️', '🔍', '🔎', '🔏', '🔐', '🔒', '🔓'],
+      symbols: ['🔥', '💯', '✨', '🌟', '⭐', '💫', '🌠', '☀️', '🌤', '⛅', '🌥', '☁️', '🌦', '🌧', '⛈', '🌩', '🌨', '❄️', '☃️', '⛄', '🌬', '💨', '💧', '💦', '☔', '☂️', '🌊', '🌫', '🔴', '🟠', '🟡', '🟢', '🔵', '🟣', '🟤', '⚫', '⚪', '🟥', '🟧', '🟨', '🟩', '🟦', '🟪', '🟫', '⬛', '⬜', '◼️', '◻️', '◾', '◽', '▪️', '▫️', '🔶', '🔷', '🔸', '🔹', '🔺', '🔻', '💠', '🔘', '🔳', '🔲', '✅', '☑️', '🔛', '🔝', '🔚', '🔙', '🔄', '🔃', '⏩', '⏭', '⏯', '◀️', '⏪', '⏮', '🔼', '⏫', '🔽', '⏬', '➡️', '⬅️', '⬆️', '⬇️', '↗️', '↘️', '↙️', '↖️', '↕️', '↔️', '↪️', '↩️', '⤴️', '⤵️', '🔀', '🔁', '🔂', '🔄', '🔃', '🎵', '🎶', '➕', '➖', '➗', '✖️', '♾', '💲', '💱', '™️', '©️', '®️', '〰️', '➰', '➿', '🔚', '🔙', '🔛', '🔝', '🔜', '✔️', '☑️', '🔘', '🔴', '🟠', '🟡', '🟢', '🔵', '🟣', '⚫', '⚪', '🟤', '🔺', '🔻', '🔸', '🔹', '🔶', '🔷', '🔳', '🔲', '▪️', '▫️', '◾', '◽', '◼️', '◻️', '🟥', '🟧', '🟨', '🟩', '🟦', '🟪', '🟫', '⬛', '⬜']
+  };
+
+  function showEmojiCategory(category) {
+      // Update category button styles
+      const categoryButtons = document.querySelectorAll('.emoji-category-btn');
+      categoryButtons.forEach(btn => {
+          if (btn.dataset.category === category) {
+              btn.classList.remove('bg-gray-700', 'hover:bg-gray-600');
+              btn.classList.add('bg-splinter-green', 'text-black');
+          } else {
+              btn.classList.remove('bg-splinter-green', 'text-black');
+              btn.classList.add('bg-gray-700', 'hover:bg-gray-600');
+          }
+      });
+
+      // Populate emoji grid
+      const emojiGrid = document.getElementById('emojiGrid');
+      const emojis = emojiCategories[category] || emojiCategories.smileys;
+
+      emojiGrid.innerHTML = emojis.map(emoji => `
+          <button
+              onclick="insertEmoji('${emoji}')"
+              class="text-2xl hover:bg-splinter-green hover:bg-opacity-20 rounded p-2 transition transform hover:scale-125"
+          >
+              ${emoji}
+          </button>
+      `).join('');
+  }
+
+  function insertEmoji(emoji) {
       const input = document.getElementById('messageInput');
-      input.value += emojis[Math.floor(Math.random() * emojis.length)];
+      input.value += emoji;
       input.focus();
+      // Close the modal after selecting an emoji
+      closeEmojiPicker();
   }
 
   function showChatMenu() {

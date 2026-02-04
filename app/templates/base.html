@@ -1,214 +1,252 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" class="dark">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{% block title %}ChatSphere{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
     <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        'splinter-green': '#00ff41',
-                        'splinter-dark': '#0a0e0f',
-                        'splinter-darker': '#060809',
-                        'splinter-gray': '#1a2426',
-                        'splinter-border': '#1e3a30',
-                        'whatsapp-green': '#00a884',
-                        'dark-green': '#005c4b',
-                        'teal-dark': '#0b141a',
-                        'teal-light': '#202c33',
-                    }
-                }
-            }
-        }
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "splinter-green": "#00ff41",
+              "splinter-dark": "#0a0e0f",
+              "splinter-darker": "#060809",
+              "splinter-gray": "#1a2426",
+              "splinter-border": "#1e3a30",
+              "whatsapp-green": "#00a884",
+              "dark-green": "#005c4b",
+              "teal-dark": "#0b141a",
+              "teal-light": "#202c33",
+            },
+          },
+        },
+      };
     </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&display=swap');
-        
-        * {
-            scrollbar-width: thin;
-            scrollbar-color: #00ff41 #0a0e0f;
+      @import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&display=swap");
+
+      * {
+        scrollbar-width: thin;
+        scrollbar-color: #00ff41 #0a0e0f;
+      }
+
+      *::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+
+      *::-webkit-scrollbar-track {
+        background: #0a0e0f;
+      }
+
+      *::-webkit-scrollbar-thumb {
+        background: #00ff41;
+        border-radius: 4px;
+      }
+
+      *::-webkit-scrollbar-thumb:hover {
+        background: #00cc33;
+      }
+
+      body {
+        font-family: "Rajdhani", sans-serif;
+        background: linear-gradient(
+          135deg,
+          #060809 0%,
+          #0a0e0f 50%,
+          #0d1415 100%
+        );
+      }
+
+      .splinter-font {
+        font-family: "Orbitron", sans-serif;
+      }
+
+      .glow-text {
+        text-shadow:
+          0 0 10px #00ff41,
+          0 0 20px #00ff41,
+          0 0 30px #00ff41;
+      }
+
+      .glow-border {
+        box-shadow:
+          0 0 15px rgba(0, 255, 65, 0.3),
+          inset 0 0 15px rgba(0, 255, 65, 0.1);
+      }
+
+      .chat-bubble {
+        animation: slideIn 0.3s ease-out;
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
         }
-        
-        *::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
+        to {
+          opacity: 1;
+          transform: translateY(0);
         }
-        
-        *::-webkit-scrollbar-track {
-            background: #0a0e0f;
+      }
+
+      .pulse-glow {
+        animation: pulse 2s ease-in-out infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          box-shadow: 0 0 5px rgba(0, 255, 65, 0.3);
         }
-        
-        *::-webkit-scrollbar-thumb {
-            background: #00ff41;
-            border-radius: 4px;
+        50% {
+          box-shadow: 0 0 20px rgba(0, 255, 65, 0.6);
         }
-        
-        *::-webkit-scrollbar-thumb:hover {
-            background: #00cc33;
+      }
+
+      .scan-line {
+        position: relative;
+        overflow: hidden;
+      }
+
+      .scan-line::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, #00ff41, transparent);
+        animation: scan 3s linear infinite;
+      }
+
+      @keyframes scan {
+        0% {
+          left: -100%;
         }
-        
-        body {
-            font-family: 'Rajdhani', sans-serif;
-            background: linear-gradient(135deg, #060809 0%, #0a0e0f 50%, #0d1415 100%);
+        100% {
+          left: 100%;
         }
-        
-        .splinter-font {
-            font-family: 'Orbitron', sans-serif;
-        }
-        
-        .glow-text {
-            text-shadow: 0 0 10px #00ff41, 0 0 20px #00ff41, 0 0 30px #00ff41;
-        }
-        
-        .glow-border {
-            box-shadow: 0 0 15px rgba(0, 255, 65, 0.3), inset 0 0 15px rgba(0, 255, 65, 0.1);
-        }
-        
-        .chat-bubble {
-            animation: slideIn 0.3s ease-out;
-        }
-        
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .pulse-glow {
-            animation: pulse 2s ease-in-out infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% {
-                box-shadow: 0 0 5px rgba(0, 255, 65, 0.3);
-            }
-            50% {
-                box-shadow: 0 0 20px rgba(0, 255, 65, 0.6);
-            }
-        }
-        
-        .scan-line {
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .scan-line::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, #00ff41, transparent);
-            animation: scan 3s linear infinite;
-        }
-        
-        @keyframes scan {
-            0% {
-                left: -100%;
-            }
-            100% {
-                left: 100%;
-            }
-        }
-        
-        .message-sent {
-            background: linear-gradient(135deg, #1e3a30 0%, #2a4f42 100%);
-            border: 1px solid #00ff4133;
-        }
-        
-        .message-received {
-            background: linear-gradient(135deg, #1a2426 0%, #232f33 100%);
-            border: 1px solid #ffffff11;
-        }
-        
-        .hover-glow:hover {
-            box-shadow: 0 0 20px rgba(0, 255, 65, 0.4);
-            border-color: #00ff41;
-        }
-        
-        .cyber-input {
-            background: rgba(10, 14, 15, 0.8);
-            border: 1px solid #1e3a30;
-            transition: all 0.3s ease;
-        }
-        
-        .cyber-input:focus {
-            outline: none;
-            border-color: #00ff41;
-            box-shadow: 0 0 15px rgba(0, 255, 65, 0.3);
-        }
-        
-        .cyber-button {
-            background: linear-gradient(135deg, #1e3a30 0%, #2a4f42 100%);
-            border: 1px solid #00ff41;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .cyber-button::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(0, 255, 65, 0.3), transparent);
-            transition: left 0.5s ease;
-        }
-        
-        .cyber-button:hover::before {
-            left: 100%;
-        }
-        
-        .cyber-button:hover {
-            box-shadow: 0 0 25px rgba(0, 255, 65, 0.5);
-            transform: translateY(-2px);
-        }
+      }
+
+      .message-sent {
+        background: linear-gradient(135deg, #1e3a30 0%, #2a4f42 100%);
+        border: 1px solid #00ff4133;
+      }
+
+      .message-received {
+        background: linear-gradient(135deg, #1a2426 0%, #232f33 100%);
+        border: 1px solid #ffffff11;
+      }
+
+      .hover-glow:hover {
+        box-shadow: 0 0 20px rgba(0, 255, 65, 0.4);
+        border-color: #00ff41;
+      }
+
+      .cyber-input {
+        background: rgba(10, 14, 15, 0.8);
+        border: 1px solid #1e3a30;
+        transition: all 0.3s ease;
+      }
+
+      .cyber-input:focus {
+        outline: none;
+        border-color: #00ff41;
+        box-shadow: 0 0 15px rgba(0, 255, 65, 0.3);
+      }
+
+      .cyber-button {
+        background: linear-gradient(135deg, #1e3a30 0%, #2a4f42 100%);
+        border: 1px solid #00ff41;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .cyber-button::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(0, 255, 65, 0.3),
+          transparent
+        );
+        transition: left 0.5s ease;
+      }
+
+      .cyber-button:hover::before {
+        left: 100%;
+      }
+
+      .cyber-button:hover {
+        box-shadow: 0 0 25px rgba(0, 255, 65, 0.5);
+        transform: translateY(-2px);
+      }
+
+      /* Emoji Picker Styles */
+      #emojiGrid button {
+        user-select: none;
+      }
+
+      #emojiGrid::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      #emojiGrid::-webkit-scrollbar-thumb {
+        background: #00ff41;
+        border-radius: 3px;
+      }
+
+      .emoji-category-btn {
+        font-size: 1.5rem;
+        min-width: 3rem;
+      }
     </style>
     {% block extra_css %}{% endblock %}
-</head>
-<body class="bg-splinter-darker text-gray-100 min-h-screen">
+  </head>
+  <body class="bg-splinter-darker text-gray-100 min-h-screen">
     {% block content %}{% endblock %}
-    
+
     <script>
-        // Global socket connection
-        const socket = io();
-        
-        socket.on('connect', function() {
-            console.log('Connected to server');
-            {% if current_user.is_authenticated %}
-            socket.emit('join_chat', {room: 'user_{{ current_user.id }}'});
-            {% endif %}
-        });
-        
-        socket.on('disconnect', function() {
-            console.log('Disconnected from server');
-        });
-        
-        // Flash message auto-hide
-        setTimeout(() => {
-            const alerts = document.querySelectorAll('.alert');
-            alerts.forEach(alert => {
-                alert.style.transition = 'opacity 0.5s ease';
-                alert.style.opacity = '0';
-                setTimeout(() => alert.remove(), 500);
-            });
-        }, 5000);
+      // Global socket connection
+      const socket = io();
+
+      socket.on('connect', function() {
+          console.log('Connected to server');
+          {% if current_user.is_authenticated %}
+          socket.emit('join_chat', {room: 'user_{{ current_user.id }}'});
+          {% endif %}
+      });
+
+      socket.on('disconnect', function() {
+          console.log('Disconnected from server');
+      });
+
+      // Flash message auto-hide
+      setTimeout(() => {
+          const alerts = document.querySelectorAll('.alert');
+          alerts.forEach(alert => {
+              alert.style.transition = 'opacity 0.5s ease';
+              alert.style.opacity = '0';
+              setTimeout(() => alert.remove(), 500);
+          });
+      }, 5000);
     </script>
-    
+
     {% block extra_js %}{% endblock %}
-</body>
+  </body>
 </html>
